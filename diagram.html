@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Job Portal – Full Stack IA Diagram</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; padding: 40px 20px; }
+
+    h1 { text-align: center; font-size: 24px; color: #7dd3fc; margin-bottom: 8px; letter-spacing: 1px; }
+    .subtitle { text-align: center; font-size: 14px; color: #64748b; margin-bottom: 40px; }
+
+    /* ── ROOT ── */
+    .root { display: flex; flex-direction: column; align-items: center; gap: 0; }
+
+    .node {
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 8px; font-size: 12px; font-weight: 600;
+      padding: 7px 16px; white-space: nowrap; position: relative;
+      letter-spacing: 0.3px;
+    }
+    .node .icon { margin-right: 6px; font-size: 14px; }
+
+    /* colours */
+    .n-root   { background:#1e40af; color:#bfdbfe; border:2px solid #3b82f6; font-size:14px; padding:10px 28px; }
+    .n-front  { background:#4c1d95; color:#ddd6fe; border:2px solid #8b5cf6; font-size:13px; }
+    .n-back   { background:#065f46; color:#a7f3d0; border:2px solid #10b981; font-size:13px; }
+    .n-src    { background:#1e3a5f; color:#93c5fd; border:2px solid #3b82f6; }
+    .n-module { background:#7c2d12; color:#fed7aa; border:2px solid #f97316; }
+    .n-comp   { background:#4a044e; color:#f5d0fe; border:2px solid #d946ef; }
+    .n-store  { background:#3b0764; color:#e9d5ff; border:2px solid #a855f7; }
+    .n-leaf   { background:#1e293b; color:#94a3b8; border:1px solid #334155; font-weight:400; font-size:11px; }
+    .n-page   { background:#0f2942; color:#7dd3fc; border:1px dashed #3b82f6; font-size:11px; font-weight:400; }
+
+    /* layout helpers */
+    .row    { display: flex; align-items: flex-start; justify-content: center; gap: 0; }
+    .col    { display: flex; flex-direction: column; align-items: center; gap: 0; }
+
+    /* section wrappers */
+    .section-wrap {
+      display: flex; flex-direction: column; align-items: center;
+      background: #0f1e35; border: 1px solid #1e3a5f;
+      border-radius: 12px; padding: 14px 10px 10px;
+      position: relative; margin: 4px;
+    }
+    .section-label {
+      position: absolute; top: -11px; left: 12px;
+      font-size: 10px; font-weight: 700; letter-spacing: 1px;
+      background: #0f1e35; padding: 0 6px; color: #475569; text-transform: uppercase;
+    }
+
+    .children-row { display: flex; align-items: flex-start; justify-content: center; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .child-col    { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+
+    /* top-level row */
+    .top-row { display: flex; align-items: flex-start; justify-content: center; gap: 20px; margin-top: 6px; width: 100%; max-width: 1400px; }
+
+    /* connectors */
+    .v4  { height: 4px;  width: 2px; background: #334155; }
+    .v8  { height: 8px;  width: 2px; background: #334155; }
+    .v12 { height: 12px; width: 2px; background: #334155; }
+    .h-line { height: 2px; background: #334155; width: 100%; }
+
+    /* legend */
+    .legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 40px; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #94a3b8; }
+    .legend-dot  { width: 12px; height: 12px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<h1>🗂 Job Portal — Architecture Diagram</h1>
+<p class="subtitle">MERN Stack · React (Vite) Frontend · Express.js Backend</p>
+
+<div class="root">
+  <div class="node n-root"><span class="icon">📦</span>JOB-Portal1/</div>
+  <div class="v12"></div>
+
+  <div class="top-row">
+
+    <!-- FRONTEND -->
+    <div class="section-wrap" style="flex: 1; max-width: 650px;">
+      <span class="section-label">frontend (React/Vite)</span>
+      <div class="node n-front"><span class="icon">⚛️</span>frontend/</div>
+      <div class="v8"></div>
+      
+      <div class="children-row">
+        <div class="child-col">
+          <div class="node n-leaf">📁 public/</div>
+        </div>
+        
+        <div class="section-wrap">
+          <span class="section-label">source</span>
+          <div class="node n-src"><span class="icon">⚙️</span>src/</div>
+          <div class="v8"></div>
+          
+          <div class="children-row">
+            <!-- UI & Components -->
+            <div class="child-col">
+              <div class="node n-comp"><span class="icon">🧩</span>components/</div>
+              <div class="v4"></div>
+              <div class="node n-page">ui/</div>
+              <div class="node n-page">layout/</div>
+              <div class="node n-page">navbar/</div>
+              <div class="node n-page">jobs/</div>
+            </div>
+
+            <!-- Pages -->
+            <div class="child-col">
+              <div class="node n-module"><span class="icon">📄</span>pages/</div>
+              <div class="v4"></div>
+              <div class="node n-page">auth/</div>
+              <div class="node n-page">dashboard/</div>
+              <div class="node n-page">Home.jsx</div>
+              <div class="node n-page">Jobs.jsx</div>
+              <div class="node n-page">CompaniesPage.jsx</div>
+            </div>
+
+            <!-- Features & State -->
+            <div class="child-col">
+              <div class="node n-store"><span class="icon">🔥</span>features/</div>
+              <div class="node n-store" style="margin-top:4px;"><span class="icon">🗃</span>store/</div>
+              <div class="node n-leaf" style="margin-top:4px;"><span class="icon">🗺️</span>routes/</div>
+              <div class="node n-leaf" style="margin-top:4px;"><span class="icon">🔌</span>services/</div>
+            </div>
+
+            <!-- Config & Utils -->
+            <div class="child-col">
+              <div class="node n-leaf">📁 assets/</div>
+              <div class="node n-leaf">📁 config/</div>
+              <div class="node n-leaf">📁 constants/</div>
+            </div>
+            
+            <!-- Root Src Files -->
+            <div class="child-col" style="margin-left: 8px;">
+              <div class="node n-page">App.jsx</div>
+              <div class="node n-page">main.jsx</div>
+              <div class="node n-page">index.css</div>
+              <div class="node n-page">App.css</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Frontend Root Files -->
+      <div class="v8"></div>
+      <div class="children-row">
+        <div class="node n-leaf">📄 package.json</div>
+        <div class="node n-leaf">📄 vite.config.js</div>
+        <div class="node n-leaf">📄 index.html</div>
+        <div class="node n-leaf">📄 .env</div>
+      </div>
+    </div>
+
+    <!-- BACKEND -->
+    <div class="section-wrap" style="flex: 1; max-width: 600px;">
+      <span class="section-label">backend (Express)</span>
+      <div class="node n-back"><span class="icon">🟢</span>backend/</div>
+      <div class="v8"></div>
+      
+      <div class="section-wrap">
+        <span class="section-label">source</span>
+        <div class="node n-src"><span class="icon">⚙️</span>src/</div>
+        <div class="v8"></div>
+        
+        <div class="children-row">
+          <!-- Modules Architecture -->
+          <div class="section-wrap">
+            <span class="section-label">feature modules</span>
+            <div class="node n-module"><span class="icon">🧱</span>modules/</div>
+            <div class="v8"></div>
+            <div class="children-row">
+              <div class="child-col">
+                <div class="node n-page">auth/</div>
+                <div class="node n-page">user/</div>
+                <div class="node n-page">company/</div>
+              </div>
+              <div class="child-col">
+                <div class="node n-page">job/</div>
+                <div class="node n-page">application/</div>
+                <div class="node n-page">admin/</div>
+                <div class="node n-page">upload/</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- MVC / Structure -->
+          <div class="child-col">
+            <div class="node n-store"><span class="icon">🗄️</span>models/</div>
+            <div class="v4"></div>
+            <div class="node n-leaf"><span class="icon">🛣️</span>routes/</div>
+            <div class="v4"></div>
+            <div class="node n-leaf"><span class="icon">🛡️</span>middleware/</div>
+            <div class="v4"></div>
+            <div class="node n-leaf"><span class="icon">🔧</span>utils/</div>
+            <div class="v4"></div>
+            <div class="node n-leaf"><span class="icon">📌</span>constants/</div>
+            <div class="v4"></div>
+            <div class="node n-leaf"><span class="icon">⚙️</span>config/</div>
+          </div>
+          
+          <!-- Backend Entry -->
+          <div class="child-col" style="margin-left: 8px;">
+            <div class="node n-page">app.js</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Backend Root Files -->
+      <div class="v8"></div>
+      <div class="children-row">
+        <div class="node n-leaf">📄 package.json</div>
+        <div class="node n-leaf">📄 server.js</div>
+        <div class="node n-leaf">📄 seedSuperAdmin.js</div>
+        <div class="node n-leaf">📄 .env</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#1e40af;border:1px solid #3b82f6;"></div> Root</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#4c1d95;border:1px solid #8b5cf6;"></div> Frontend App</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#065f46;border:1px solid #10b981;"></div> Backend App</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1e3a5f;border:1px solid #3b82f6;"></div> Source</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#4a044e;border:1px solid #d946ef;"></div> Components</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#7c2d12;border:1px solid #f97316;"></div> Pages / Modules</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#3b0764;border:1px solid #a855f7;"></div> State / Models</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1e293b;border:1px solid #334155;"></div> Directory</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#0f2942;border:1px dashed #3b82f6;"></div> File</div>
+</div>
+
+</body>
+</html>
