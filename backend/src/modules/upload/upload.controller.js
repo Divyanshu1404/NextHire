@@ -1,12 +1,11 @@
 import * as uploadService from './upload.service.js';
 import { asyncHandler } from '../../utils/asyncHandler.js';
-import { apiResponse } from '../../utils/apiResponse.js';
+import { sendSuccess } from '../../utils/response.js';
+import { AppError } from '../../utils/appError.js';
 
 export const uploadFileHandler = asyncHandler(async (req, res) => {
   if (!req.file) {
-    const error = new Error('No file provided');
-    error.statusCode = 400;
-    throw error;
+    throw new AppError('No file provided', 400);
   }
 
   const folder = req.body.folder || 'job-portal';
@@ -19,5 +18,5 @@ export const uploadFileHandler = asyncHandler(async (req, res) => {
     req.file.mimetype
   );
   
-  apiResponse(res, 200, 'File uploaded successfully', { url });
+  return sendSuccess(res, 'File uploaded successfully', { url });
 });

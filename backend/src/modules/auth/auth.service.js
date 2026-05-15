@@ -1,12 +1,12 @@
-import { User } from '../../models/user.model.js';
 import bcrypt from 'bcrypt';
 import { generateToken } from '../../utils/generateToken.js';
 import { ROLES } from '../../constants/roles.js';
+import * as userRepository from '../../repositories/user.repository.js';
 
 export const registerUser = async (userData) => {
   const { name, email, password, role } = userData;
 
-  const userExists = await User.findOne({ email });
+  const userExists = await userRepository.findByEmail(email);
   if (userExists) {
     const error = new Error('User already exists');
     error.statusCode = 400;
@@ -16,7 +16,7 @@ export const registerUser = async (userData) => {
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
 
-  const user = await User.create({
+  const user = await userRepository.create({
     name,
     email,
     password: hashedPassword,
@@ -39,7 +39,7 @@ export const registerUser = async (userData) => {
 };
 
 export const loginUser = async (email, password) => {
-  const user = await User.findOne({ email }).populate('companyId');
+  const user = await userRepository.findByIdWithPassword((await userRepository.findByEmail(email))?._id);
   if (!user) {
     const error = new Error('Invalid email or password');
     error.statusCode = 401;

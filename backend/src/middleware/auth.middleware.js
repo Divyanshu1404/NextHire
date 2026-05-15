@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken';
-import { User } from '../models/user.model.js';
 import { config } from '../config/env.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { AppError } from '../utils/appError.js';
+import * as userRepository from '../repositories/user.repository.js';
 
 export const protect = asyncHandler(async (req, res, next) => {
   let token;
@@ -10,23 +11,17 @@ export const protect = asyncHandler(async (req, res, next) => {
   }
 
   if (!token) {
-    const error = new Error('Not authorized, no token provided');
-    error.statusCode = 401;
-    throw error;
+    throw new AppError('Not authorized, no token provided', 401);
   }
 
   try {
     const decoded = jwt.verify(token, config.jwtSecret);
-    req.user = await User.findById(decoded.id).populate('companyId').select('-password');
+    req.user = await userRepository.findById(decoded.id);
     if (!req.user) {
-      const error = new Error('Not authorized, user not found');
-      error.statusCode = 401;
-      throw error;
+      throw new AppError('Not authorized, user not found', 401);
     }
     next();
   } catch (err) {
-    const error = new Error('Not authorized, token failed');
-    error.statusCode = 401;
-    throw error;
+    throw new AppError('Not authorized, token failed', 401);
   }
 });

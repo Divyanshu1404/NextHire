@@ -6,6 +6,7 @@ import jobRoutes from '../modules/job/job.routes.js';
 import applicationRoutes from '../modules/application/application.routes.js';
 import adminRoutes from '../modules/admin/admin.routes.js';
 import uploadRoutes from '../modules/upload/upload.routes.js';
+import aiRoutes from '../modules/ai/ai.routes.js';
 
 const router = express.Router();
 
@@ -16,5 +17,6 @@ router.use('/jobs', jobRoutes);
 router.use('/application', applicationRoutes);
 router.use('/admin', adminRoutes);
 router.use('/upload', uploadRoutes);
+router.use('/ai', aiRoutes);
 
 export default router;

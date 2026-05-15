@@ -1,47 +1,43 @@
-import { Application } from '../../models/application.model.js';
-import { Job } from '../../models/job.model.js';
+import * as applicationRepository from '../../repositories/application.repository.js';
+import * as jobRepository from '../../repositories/job.repository.js';
+import * as companyRepository from '../../repositories/company.repository.js';
 import { sendAssessmentEmail } from '../../utils/email.service.js';
 import { APPLICATION_STATUS } from '../../constants/status.js';
 
-
 export const applyForJob = async (jobId, userId, applicationData) => {
   const { resumeUrl, coverLetter } = applicationData;
-  const job = await Job.findById(jobId);
+  const job = await jobRepository.findById(jobId);
   if (!job) {
     const error = new Error('Job not found');
     error.statusCode = 404;
     throw error;
   }
 
-  const existingApplication = await Application.findOne({ jobId, userId });
+  const existingApplication = await applicationRepository.findOne({ jobId, userId });
   if (existingApplication) {
     const error = new Error('You have already applied for this job');
     error.statusCode = 400;
     throw error;
   }
 
-  const application = await Application.create({
+  return applicationRepository.createApplication({
     userId,
     jobId,
     companyId: job.companyId,
     resumeUrl,
-    coverLetter
+    coverLetter,
   });
-
-  return application;
 };
-
 
 export const updateApplicationStatus = async (applicationId, updateData, userId, role) => {
   const { status, assessmentLink } = updateData;
 
-  const application = await Application.findById(applicationId);
+  const application = await applicationRepository.findById(applicationId);
   if (!application) {
     const error = new Error('Application not found');
     error.statusCode = 404;
     throw error;
   }
-
 
   if (role === 'hr' && !['shortlisted', 'rejected'].includes(status)) {
     const error = new Error('HR can only shortlist or reject');
@@ -55,31 +51,28 @@ export const updateApplicationStatus = async (applicationId, updateData, userId,
   }
   application.updatedBy = userId;
 
-  await application.save();
+  await applicationRepository.save(application);
   return application;
 };
 
 export const sendAssessment = async (applicationId, assessmentLink, userId) => {
-  const application = await Application.findById(applicationId)
+  const application = await applicationRepository.findById(applicationId)
     .populate('userId', 'name email')
     .populate('jobId', 'title companyId');
-    
+
   if (!application) {
     const error = new Error('Application not found');
     error.statusCode = 404;
     throw error;
   }
 
-  // Populate companyName manually or from Job
-  const { Company } = await import('../../models/company.model.js');
-  const company = await Company.findById(application.jobId.companyId);
+  const company = await companyRepository.findById(application.jobId.companyId);
 
   application.status = APPLICATION_STATUS.ASSESSMENT_SENT;
   application.assessmentLink = assessmentLink;
   application.updatedBy = userId;
-  await application.save();
+  await applicationRepository.save(application);
 
-  // Send email
   await sendAssessmentEmail(
     application.userId.email,
     application.userId.name,
@@ -91,27 +84,14 @@ export const sendAssessment = async (applicationId, assessmentLink, userId) => {
   return application;
 };
 
-
 export const getApplicationsForJob = async (jobId, companyId) => {
-  const applications = await Application.find({ jobId, companyId })
-    .populate('userId', 'name email profilePicture profile');
-  return applications;
+  return applicationRepository.findByJobId(jobId, companyId);
 };
 
 export const getCompanyApplications = async (companyId) => {
-  const applications = await Application.find({ companyId })
-    .populate('userId', 'name email profilePicture profile')
-    .populate('jobId', 'title')
-    .sort({ createdAt: -1 });
-  return applications;
+  return applicationRepository.findByCompanyId(companyId);
 };
 
-
 export const getUserApplications = async (userId) => {
-  const applications = await Application.find({ userId }).populate({
-    path: 'jobId',
-    select: 'title location companyId',
-    populate: { path: 'companyId', select: 'companyName' }
-  });
-  return applications;
+  return applicationRepository.findByUserId(userId);
 };

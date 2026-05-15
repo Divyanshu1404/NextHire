@@ -1,10 +1,10 @@
 import * as applicationService from './application.service.js';
 import { asyncHandler } from '../../utils/asyncHandler.js';
-import { apiResponse } from '../../utils/apiResponse.js';
+import { sendSuccess } from '../../utils/response.js';
 
 export const applyJob = asyncHandler(async (req, res) => {
   const application = await applicationService.applyForJob(req.body.jobId, req.user.id, req.body);
-  apiResponse(res, 201, 'Applied successfully', { application });
+  return sendSuccess(res, 'Applied successfully', { application }, 201);
 });
 
 export const updateStatus = asyncHandler(async (req, res) => {
@@ -14,7 +14,7 @@ export const updateStatus = asyncHandler(async (req, res) => {
     req.user.id, 
     req.user.role
   );
-  apiResponse(res, 200, 'Application status updated', { application });
+  return sendSuccess(res, 'Application status updated', { application });
 });
 
 export const sendAssessment = asyncHandler(async (req, res) => {
@@ -23,22 +23,22 @@ export const sendAssessment = asyncHandler(async (req, res) => {
     req.body.assessmentLink,
     req.user.id
   );
-  apiResponse(res, 200, 'Assessment sent successfully', { application });
+  return sendSuccess(res, 'Assessment sent successfully', { application });
 });
 
 export const getApplications = asyncHandler(async (req, res) => {
   const companyId = req.user.companyId?._id || req.user.companyId;
   const applications = await applicationService.getApplicationsForJob(req.params.jobId, companyId);
-  apiResponse(res, 200, 'Applications retrieved', { applications });
+  return sendSuccess(res, 'Applications retrieved', { applications });
 });
 
 export const getCompanyApplications = asyncHandler(async (req, res) => {
   const companyId = req.user.companyId?._id || req.user.companyId;
   const applications = await applicationService.getCompanyApplications(companyId);
-  apiResponse(res, 200, 'Company applications retrieved', { applications });
+  return sendSuccess(res, 'Company applications retrieved', { applications });
 });
 
 export const getMyApplications = asyncHandler(async (req, res) => {
   const applications = await applicationService.getUserApplications(req.user.id);
-  apiResponse(res, 200, 'My applications retrieved', { applications });
+  return sendSuccess(res, 'My applications retrieved', { applications });
 });

@@ -1,7 +1,7 @@
-import { User } from '../../models/user.model.js';
+import * as userRepository from '../../repositories/user.repository.js';
 
 export const getUserProfile = async (userId) => {
-  const user = await User.findById(userId).select('-password').populate('companyId');
+  const user = await userRepository.findById(userId);
   if (!user) {
     const error = new Error('User not found');
     error.statusCode = 404;
@@ -11,7 +11,7 @@ export const getUserProfile = async (userId) => {
 };
 
 export const updateUserProfile = async (userId, updateData) => {
-  const user = await User.findById(userId);
+  const user = await userRepository.findByIdWithPassword(userId);
   if (!user) {
     const error = new Error('User not found');
     error.statusCode = 404;
@@ -42,5 +42,5 @@ export const updateUserProfile = async (userId, updateData) => {
   }
 
   await user.save();
-  return await User.findById(userId).select('-password');
+  return await userRepository.findById(userId);
 };

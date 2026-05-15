@@ -24,4 +24,7 @@ const jobSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
+jobSchema.index({ companyId: 1, createdAt: -1 });
+jobSchema.index({ title: 'text', description: 'text', location: 'text' });
+
 export const Job = mongoose.model('Job', jobSchema);
