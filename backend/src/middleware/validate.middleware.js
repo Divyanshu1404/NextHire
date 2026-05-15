@@ -1,3 +1,5 @@
+import { AppError } from '../utils/appError.js';
+
 export const validate = (schema) => (req, res, next) => {
   try {
     schema.parse({
@@ -10,11 +12,8 @@ export const validate = (schema) => (req, res, next) => {
     const issues = error.issues || error.errors;
     if (issues && Array.isArray(issues)) {
       const message = issues.map(err => err.message).join(', ');
-      const err = new Error(message);
-      err.statusCode = 400;
-      return next(err);
+      return next(new AppError(message, 400));
     }
-    error.statusCode = 400;
-    next(error);
+    return next(new AppError(error.message || 'Validation failed', 400));
   }
 };

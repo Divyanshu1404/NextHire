@@ -16,4 +16,7 @@ const companySchema = new mongoose.Schema({
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 }, { timestamps: true });
 
+companySchema.index({ registrationNumber: 1 }, { unique: true });
+companySchema.index({ verificationStatus: 1, createdAt: -1 });
+
 export const Company = mongoose.model('Company', companySchema);

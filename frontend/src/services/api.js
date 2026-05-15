@@ -1,4 +1,4 @@
-import api from '../config/axios';
+import api from '../api/httpClient.js';
 
 export const authAPI = {
   login: (data) => api.post('/auth/login', data),

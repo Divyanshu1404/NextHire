@@ -1,39 +1,41 @@
-import { Company } from '../../models/company.model.js';
-import { User } from '../../models/user.model.js';
+import * as companyRepository from '../../repositories/company.repository.js';
+import * as userRepository from '../../repositories/user.repository.js';
+import * as jobRepository from '../../repositories/job.repository.js';
+import * as applicationRepository from '../../repositories/application.repository.js';
 import { ROLES } from '../../constants/roles.js';
+import { APPLICATION_STATUS } from '../../constants/status.js';
 
 const getUserCompanyId = (user) => user?.companyId?._id || user?.companyId;
 
 export const registerCompany = async (companyData, userId) => {
   const { companyName, email, website, registrationNumber, kycDocumentUrl } = companyData;
 
-  const existingCompany = await Company.findOne({ registrationNumber });
+  const existingCompany = await companyRepository.findByRegistrationNumber(registrationNumber);
   if (existingCompany) {
     const error = new Error('Company with this registration number already exists');
     error.statusCode = 400;
     throw error;
   }
 
-  const company = await Company.create({
+  const company = await companyRepository.createCompany({
     companyName,
     email,
     website,
     registrationNumber,
     kycDocumentUrl,
-    createdBy: userId
+    createdBy: userId,
   });
 
-
-  await User.findByIdAndUpdate(userId, { 
+  await userRepository.findOneAndUpdate({ _id: userId }, {
     companyId: company._id,
-    role: ROLES.COMPANY_ADMIN 
+    role: ROLES.COMPANY_ADMIN,
   });
 
   return company;
 };
 
 export const getCompanyById = async (companyId) => {
-  const company = await Company.findById(companyId);
+  const company = await companyRepository.findById(companyId);
   if (!company) {
     const error = new Error('Company not found');
     error.statusCode = 404;
@@ -43,13 +45,11 @@ export const getCompanyById = async (companyId) => {
 };
 
 export const getApprovedCompanies = async () => {
-  const companies = await Company.find({ verificationStatus: 'approved' }).sort({ createdAt: -1 });
-  return companies;
+  return companyRepository.findApproved();
 };
 
-
 export const addTeamMember = async (email, role, companyId) => {
-  const user = await User.findOne({ email });
+  const user = await userRepository.findByEmail(email);
   if (!user) {
     const error = new Error('User not found. They must register first.');
     error.statusCode = 404;
@@ -70,43 +70,32 @@ export const addTeamMember = async (email, role, companyId) => {
 };
 
 export const getCompanyStats = async (companyId) => {
-  const { Job } = await import('../../models/job.model.js');
-  const { Application } = await import('../../models/application.model.js');
-  const { APPLICATION_STATUS } = await import('../../constants/status.js');
+  const totalJobs = await jobRepository.countDocuments({ companyId });
+  const companyJobs = await jobRepository.findByCompanyId(companyId);
+  const jobIds = companyJobs.map((job) => job._id);
 
-  const totalJobs = await Job.countDocuments({ companyId });
-  
-  const companyJobs = await Job.find({ companyId }).select('_id');
-  const jobIds = companyJobs.map(job => job._id);
+  const totalApplications = await applicationRepository.countDocuments({ jobId: { $in: jobIds } });
 
-  const totalApplications = await Application.countDocuments({ jobId: { $in: jobIds } });
-  
-  // New applications (last 7 days)
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  const newApplications = await Application.countDocuments({ 
+
+  const newApplications = await applicationRepository.countDocuments({
     jobId: { $in: jobIds },
-    createdAt: { $gte: sevenDaysAgo }
+    createdAt: { $gte: sevenDaysAgo },
   });
 
-  const shortlistedCount = await Application.countDocuments({ 
-    jobId: { $in: jobIds }, 
-    status: APPLICATION_STATUS.SHORTLISTED 
+  const shortlistedCount = await applicationRepository.countDocuments({
+    jobId: { $in: jobIds },
+    status: APPLICATION_STATUS.SHORTLISTED,
   });
 
-  // Fetch recent activity (last 5 applications)
-  const recentActivity = await Application.find({ jobId: { $in: jobIds } })
-    .populate('userId', 'name')
-    .populate('jobId', 'title')
-    .sort({ createdAt: -1 })
-    .limit(5);
-
-  const formattedActivity = recentActivity.map(app => ({
+  const recentActivity = await applicationRepository.findByCompanyId(companyId);
+  const formattedActivity = recentActivity.slice(0, 5).map((app) => ({
     id: app._id,
     user: app.userId?.name || 'Unknown User',
     job: app.jobId?.title || 'Unknown Job',
     status: app.status,
-    time: app.createdAt
+    time: app.createdAt,
   }));
 
   return {
@@ -114,26 +103,22 @@ export const getCompanyStats = async (companyId) => {
     totalCandidates: totalApplications,
     newApplications,
     shortlisted: shortlistedCount,
-    recentActivity: formattedActivity
+    recentActivity: formattedActivity,
   };
 };
 
 export const getCompanyTeam = async (companyId) => {
-  const users = await User.find({ companyId })
-    .select('name email role profilePicture createdAt')
-    .sort({ createdAt: -1 });
-  return users;
+  return userRepository.findByCompanyId(companyId);
 };
 
 export const updateCompanyById = async (companyId, updateData, user) => {
-  const company = await Company.findById(companyId);
+  const company = await companyRepository.findById(companyId);
   if (!company) {
     const error = new Error('Company not found');
     error.statusCode = 404;
     throw error;
   }
 
-  // Only allow company admins of this company or super admin to update
   const isSameCompany = getUserCompanyId(user)?.toString() === companyId.toString();
   const isSuperAdmin = user.role === ROLES.SUPER_ADMIN;
   if (!isSameCompany && !isSuperAdmin) {
@@ -145,7 +130,7 @@ export const updateCompanyById = async (companyId, updateData, user) => {
   const { companyName, email, website, registrationNumber, kycDocumentUrl, logoUrl } = updateData;
 
   if (registrationNumber && registrationNumber !== company.registrationNumber) {
-    const existing = await Company.findOne({ registrationNumber });
+    const existing = await companyRepository.findByRegistrationNumber(registrationNumber);
     if (existing) {
       const error = new Error('Another company with this registration number already exists');
       error.statusCode = 400;
@@ -165,35 +150,25 @@ export const updateCompanyById = async (companyId, updateData, user) => {
 };
 
 export const deleteCompanyById = async (companyId, user) => {
-  const company = await Company.findById(companyId);
+  const company = await companyRepository.findById(companyId);
   if (!company) {
     const error = new Error('Company not found');
     error.statusCode = 404;
     throw error;
   }
 
-  // Only super admin can delete companies
   if (user.role !== ROLES.SUPER_ADMIN) {
     const error = new Error('Only Super Admin can delete companies');
     error.statusCode = 403;
     throw error;
   }
 
-  // Delete all jobs associated with this company
-  const { Job } = await import('../../models/job.model.js');
-  await Job.deleteMany({ companyId });
-
-  // Delete all applications associated with this company's jobs
-  const { Application } = await import('../../models/application.model.js');
-  const companyJobs = await Job.find({ companyId }).select('_id');
-  const jobIds = companyJobs.map(job => job._id);
-  await Application.deleteMany({ jobId: { $in: jobIds } });
-
-  // Remove company reference from all users
-  await User.updateMany({ companyId }, { companyId: null, role: ROLES.USER });
-
-  // Delete the company
-  await Company.findByIdAndDelete(companyId);
+  const companyJobs = await jobRepository.findByCompanyId(companyId);
+  const jobIds = companyJobs.map((job) => job._id);
+  await applicationRepository.deleteMany({ jobId: { $in: jobIds } });
+  await jobRepository.deleteMany({ companyId });
+  await userRepository.updateMany({ companyId }, { companyId: null, role: ROLES.USER });
+  await companyRepository.deleteById(companyId);
 
   return { message: 'Company deleted successfully' };
 };

@@ -1,8 +1,8 @@
-import { Company } from '../../models/company.model.js';
+import * as companyRepository from '../../repositories/company.repository.js';
 import { COMPANY_VERIFICATION_STATUS } from '../../constants/status.js';
 
 export const getAllCompanies = async () => {
-  return await Company.find().populate('createdBy', 'name email');
+  return companyRepository.findAllWithCreator();
 };
 
 export const updateCompanyKYCStatus = async (companyId, status) => {
@@ -12,7 +12,7 @@ export const updateCompanyKYCStatus = async (companyId, status) => {
     throw error;
   }
 
-  const company = await Company.findById(companyId);
+  const company = await companyRepository.findById(companyId);
   if (!company) {
     const error = new Error('Company not found');
     error.statusCode = 404;
