@@ -39,7 +39,7 @@ export const registerUser = async (userData) => {
 };
 
 export const loginUser = async (email, password) => {
-  const user = await userRepository.findByIdWithPassword((await userRepository.findByEmail(email))?._id);
+  const user = await userRepository.findByEmail(email);
   if (!user) {
     const error = new Error('Invalid email or password');
     error.statusCode = 401;

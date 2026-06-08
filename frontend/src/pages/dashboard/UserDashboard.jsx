@@ -1,36 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Briefcase, FileText, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import StatCard from '../../components/ui/StatCard';
 import ApplicationCard from '../../features/applications/components/ApplicationCard';
 import Loader from '../../components/ui/Loader';
 import Button from '../../components/ui/Button';
-import { applicationAPI } from '../../services/api';
+import { fetchMyApplications } from '../../store/thunks/applicationThunks';
 
 const UserDashboard = () => {
+  const dispatch = useDispatch();
   const { user } = useSelector(state => state.auth);
-  const [applications, setApplications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { myApplications: applications, loading, error } = useSelector(state => state.applications);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        const response = await applicationAPI.getMyApplications();
-        const apps = response.data?.data?.applications || response.data?.data || [];
-        setApplications(Array.isArray(apps) ? apps : []);
-      } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-        setError('Failed to load applications. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, []);
+    dispatch(fetchMyApplications());
+  }, [dispatch]);
 
   const stats = [
     { 

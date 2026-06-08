@@ -1,39 +1,26 @@
-import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Users, Briefcase, FileText, Activity, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import StatCard from '../../components/ui/StatCard';
-import { companyAPI } from '../../services/api';
+import { fetchCompanyStats, fetchCompanyDetails } from '../../store/thunks/companyThunks';
 import Loader from '../../components/ui/Loader';
 import { formatDistanceToNow } from 'date-fns';
 import styles from './RecruiterDashboard.module.css';
 
 const RecruiterDashboard = () => {
+  const dispatch = useDispatch();
   const { user } = useSelector(state => state.auth);
-  const [stats, setStats] = useState(null);
-  const [company, setCompany] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { companyStats, selectedCompany: company, loading } = useSelector(state => state.company);
+  const stats = companyStats?.stats;
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await companyAPI.getCompanyStats();
-        setStats(response.data.data.stats);
-        
-        // Fetch company details
-        const compId = user?.companyId?._id || user?.companyId;
-        if (compId) {
-          const compRes = await companyAPI.getCompanyDetails(compId);
-          const compData = compRes.data.data.company || compRes.data.data;
-          setCompany(compData);
-        }
-      } catch (error) {
-        console.error('Error fetching stats:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
-  }, []);
+    dispatch(fetchCompanyStats());
+    
+    const compId = user?.companyId?._id || user?.companyId;
+    if (compId) {
+      dispatch(fetchCompanyDetails(compId));
+    }
+  }, [dispatch, user]);
 
   if (loading) return <Loader />;
 

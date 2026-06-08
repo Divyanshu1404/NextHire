@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { ChevronLeft, User, Mail, FileText, CheckCircle, XCircle, ExternalLink, MessageSquare } from 'lucide-react';
-import { applicationAPI, jobsAPI } from '../../services/api';
+import { fetchJobById } from '../../store/thunks/jobThunks';
+import { fetchJobApplications, updateApplicationStatus, sendAssessment } from '../../store/thunks/applicationThunks';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Loader from '../../components/ui/Loader';
@@ -9,41 +11,25 @@ import Loader from '../../components/ui/Loader';
 const JobApplications = () => {
   const { jobId } = useParams();
   const navigate = useNavigate();
-  const [job, setJob] = useState(null);
-  const [applications, setApplications] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
+
+  const { selectedJob: job, loading: jobLoading } = useSelector(state => state.jobs);
+  const { jobApplications: applications, loading: appsLoading } = useSelector(state => state.applications);
+
   const [updatingId, setUpdatingId] = useState(null);
   const [assessmentModal, setAssessmentModal] = useState({ isOpen: false, appId: null, link: '' });
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [jobRes, appsRes] = await Promise.all([
-        jobsAPI.getJobById(jobId),
-        applicationAPI.getJobApplications(jobId)
-      ]);
-      
-      setJob(jobRes.data.data.job || jobRes.data.data);
-      setApplications(appsRes.data.data.applications || appsRes.data.data || []);
-    } catch (err) {
-      console.error('Error fetching applications:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchData();
-  }, [jobId]);
+    dispatch(fetchJobById(jobId));
+    dispatch(fetchJobApplications(jobId));
+  }, [jobId, dispatch]);
 
-  const handleStatusUpdate = async (appId, newStatus) => {
+  const handleStatusUpdate = async (appId, status) => {
     try {
       setUpdatingId(appId);
-      await applicationAPI.updateApplicationStatus(appId, newStatus);
-      
-      await fetchData();
+      await dispatch(updateApplicationStatus({ id: appId, status })).unwrap();
     } catch (err) {
-      alert('Failed to update status');
+      alert(err || 'Failed to update status');
     } finally {
       setUpdatingId(null);
     }
@@ -53,18 +39,17 @@ const JobApplications = () => {
     e.preventDefault();
     try {
       setUpdatingId(assessmentModal.appId);
-      await applicationAPI.sendAssessmentLink(assessmentModal.appId, assessmentModal.link);
+      await dispatch(sendAssessment({ id: assessmentModal.appId, assessmentLink: assessmentModal.link })).unwrap();
       setAssessmentModal({ isOpen: false, appId: null, link: '' });
-      await fetchData();
       alert('Assessment link sent successfully via email!');
     } catch (err) {
-      alert('Failed to send assessment link');
+      alert(err || 'Failed to send assessment link');
     } finally {
       setUpdatingId(null);
     }
   };
 
-  if (loading) return <Loader fullScreen />;
+  if (jobLoading || appsLoading) return <Loader fullScreen />;
 
   return (
     <div>
@@ -101,7 +86,7 @@ const JobApplications = () => {
               overflow: 'hidden',
               boxShadow: 'var(--shadow-sm)'
             }}>
-              
+
               <div style={{ 
                 padding: '1.5rem',
                 display: 'flex',
@@ -137,7 +122,7 @@ const JobApplications = () => {
                   </Badge>
 
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    
+
                     {app.status === 'applied' && (
                       <Button 
                         variant="primary" 
@@ -228,7 +213,7 @@ const JobApplications = () => {
                     app.coverLetter.startsWith('http') ? (
                       <Button 
                         variant="ghost" 
-                        size="sm"
+                        size="sm" 
                         onClick={() => window.open(app.coverLetter, '_blank', 'noopener,noreferrer')}
                         style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)', fontWeight: 600, padding: '0.25rem 0' }}
                       >
@@ -281,3 +266,4 @@ const JobApplications = () => {
 };
 
 export default JobApplications;
+

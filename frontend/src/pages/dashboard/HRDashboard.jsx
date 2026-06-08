@@ -1,45 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { Users, UserCheck, FileText, Calendar, Briefcase, ChevronRight } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Users, UserCheck, FileText, Briefcase, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import StatCard from '../../components/ui/StatCard';
 import Loader from '../../components/ui/Loader';
 import Button from '../../components/ui/Button';
-import { companyAPI, jobsAPI } from '../../services/api';
+import { fetchCompanyStats } from '../../store/thunks/companyThunks';
+import { fetchCompanyJobs } from '../../store/thunks/jobThunks';
 
 const HRDashboard = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { user } = useSelector(state => state.auth);
-  const [stats, setStats] = useState({ activeJobs: 0, totalCandidates: 0, newApplications: 0, shortlisted: 0, recentActivity: [] });
-  const [recentJobs, setRecentJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { companyStats, loading: companyLoading } = useSelector(state => state.company);
+  const { companyJobs: jobs, loading: jobsLoading } = useSelector(state => state.jobs);
+
+  const apiStats = companyStats?.stats || {};
+  const stats = {
+    activeJobs: apiStats.activeJobs || apiStats.totalJobs || 0,
+    totalCandidates: apiStats.totalCandidates || apiStats.totalApplications || 0,
+    newApplications: apiStats.newApplications || 0,
+    shortlisted: apiStats.shortlisted || 0,
+    recentActivity: apiStats.recentActivity || []
+  };
+
+  const recentJobs = jobs?.slice(0, 5) || [];
 
   useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [statsRes, jobsRes] = await Promise.all([
-        companyAPI.getCompanyStats(),
-        jobsAPI.getCompanyJobs()
-      ]);
-      const apiStats = statsRes.data.data.stats || statsRes.data.data || {};
-      setStats({
-        activeJobs: apiStats.activeJobs || apiStats.totalJobs || 0,
-        totalCandidates: apiStats.totalCandidates || apiStats.totalApplications || 0,
-        newApplications: apiStats.newApplications || 0,
-        shortlisted: apiStats.shortlisted || 0,
-        recentActivity: apiStats.recentActivity || []
-      });
-      setRecentJobs(jobsRes.data.data.jobs?.slice(0, 5) || jobsRes.data.data?.slice(0, 5) || []);
-    } catch (err) {
-      console.error('Error fetching HR dashboard data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    dispatch(fetchCompanyStats());
+    dispatch(fetchCompanyJobs());
+  }, [dispatch]);
 
   const dashboardStats = [
     { title: 'Active Jobs', value: String(stats.activeJobs || 0), icon: Briefcase },
@@ -48,7 +38,7 @@ const HRDashboard = () => {
     { title: 'Pending Reviews', value: String(Math.max(0, (stats.totalCandidates || 0) - (stats.shortlisted || 0))), icon: FileText },
   ];
 
-  if (loading) return <Loader fullScreen />;
+  if (companyLoading || jobsLoading) return <Loader fullScreen />;
 
   return (
     <div>
@@ -64,7 +54,7 @@ const HRDashboard = () => {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
-        
+
         <div style={{ background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', overflow: 'hidden' }}>
           <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Active Job Postings</h2>

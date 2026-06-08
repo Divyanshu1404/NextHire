@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { jobsAPI, applicationAPI } from '../../services/api';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchJobs } from '../../store/thunks/jobThunks';
+import { fetchMyApplications } from '../../store/thunks/applicationThunks';
 import JobCard from '../../components/jobs/JobCard';
 import JobFilters from '../../components/jobs/JobFilters';
 import SkeletonCard from '../../components/jobs/SkeletonCard';
@@ -13,47 +14,35 @@ import styles from '../../components/jobs/Jobs.module.css';
 const JobsPage = () => {
   const [searchParams] = useSearchParams();
   const companyIdFromQuery = searchParams.get('companyId') || '';
+  const dispatch = useDispatch();
 
-  const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     keyword: '',
     location: '',
     jobType: '',
     companyId: companyIdFromQuery,
   });
+
   const { isAuthenticated, user } = useSelector(state => state.auth);
+  const { jobs, loading } = useSelector(state => state.jobs);
+  const { myApplications } = useSelector(state => state.applications);
+
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
-  const [myApplications, setMyApplications] = useState([]);
 
   useEffect(() => {
-    fetchJobs();
-  }, [filters]);
+    dispatch(fetchJobs(filters));
+  }, [filters, dispatch]);
+
+  useEffect(() => {
+    if (isAuthenticated && user?.role === 'user') {
+      dispatch(fetchMyApplications());
+    }
+  }, [isAuthenticated, user, dispatch]);
 
   useEffect(() => {
     setFilters(prev => ({ ...prev, companyId: companyIdFromQuery }));
   }, [companyIdFromQuery]);
-
-  const fetchJobs = async () => {
-    setLoading(true);
-    try {
-      const response = await jobsAPI.getAllJobs(filters);
-      const jobList = response.data?.data?.jobs || response.data?.data || [];
-      setJobs(Array.isArray(jobList) ? jobList : []);
-      
-      if (isAuthenticated && user?.role === 'user') {
-        const appRes = await applicationAPI.getMyApplications();
-        const apps = appRes.data?.data?.applications || appRes.data?.data || [];
-        setMyApplications(apps);
-      }
-      
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching jobs:', error);
-      setLoading(false);
-    }
-  };
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -117,7 +106,8 @@ const JobsPage = () => {
           companyName={selectedJob.companyId?.companyName || 'NextHire Partner'}
           onSuccess={() => {
             setIsApplyModalOpen(false);
-            alert('Application submitted successfully!');
+            // Optionally dispatch fetchMyApplications here to update immediate state
+            dispatch(fetchMyApplications());
           }}
         />
       )}

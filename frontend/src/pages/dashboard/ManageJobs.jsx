@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Briefcase, Plus, MapPin, Users, Edit, Trash2 } from 'lucide-react';
-import { jobsAPI } from '../../services/api';
+import { fetchCompanyJobs, deleteJob } from '../../store/thunks/jobThunks';
 import { ROLES } from '../../constants/roles';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
@@ -10,38 +10,24 @@ import Loader from '../../components/ui/Loader';
 
 const ManageJobs = () => {
   const navigate = useNavigate();
-  const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
+  const { role, user } = useSelector(state => state.auth);
+  const { companyJobs: jobs, loading } = useSelector(state => state.jobs);
 
   useEffect(() => {
-    fetchJobs();
-  }, []);
-
-  const fetchJobs = async () => {
-    try {
-      setLoading(true);
-      const response = await jobsAPI.getCompanyJobs();
-      setJobs(response.data?.data?.jobs || response.data?.data || []);
-    } catch (err) {
-      console.error('Error fetching company jobs:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    dispatch(fetchCompanyJobs());
+  }, [dispatch]);
 
   const handleDelete = async (jobId) => {
     if (window.confirm('Are you sure you want to delete this job?')) {
       try {
-        await jobsAPI.deleteJob(jobId);
-        fetchJobs();
+        await dispatch(deleteJob(jobId)).unwrap();
       } catch (err) {
-        console.error('Error deleting job:', err);
-        alert('Failed to delete job.');
+        alert(err || 'Failed to delete job.');
       }
     }
   };
 
-  const { role, user } = useSelector(state => state.auth);
   const isManagementRole = [ROLES.RECRUITER, ROLES.HR, ROLES.COMPANY_ADMIN, ROLES.SUPER_ADMIN].includes(role);
 
   const canManageJob = (job) => {

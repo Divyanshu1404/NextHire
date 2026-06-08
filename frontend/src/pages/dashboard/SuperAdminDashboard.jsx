@@ -1,44 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Shield, Building, Users, AlertCircle, CheckCircle, XCircle, Clock, ExternalLink, Trash2 } from 'lucide-react';
 import StatCard from '../../components/ui/StatCard';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Loader from '../../components/ui/Loader';
-import { adminAPI } from '../../services/api';
+import { fetchAllCompanies, updateKYCStatus, deleteCompany } from '../../store/thunks/adminThunks';
 
 const SuperAdminDashboard = () => {
+  const dispatch = useDispatch();
   const { user } = useSelector(state => state.auth);
-  const [companies, setCompanies] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { allCompanies: companies, loading, error } = useSelector(state => state.admin);
+  
   const [actionLoading, setActionLoading] = useState(null);
-  const [error, setError] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
-  const fetchCompanies = async () => {
-    try {
-      setLoading(true);
-      const response = await adminAPI.getAllCompanies();
-      setCompanies(response.data.data?.companies || []);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load companies');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchCompanies();
-  }, []);
+    dispatch(fetchAllCompanies());
+  }, [dispatch]);
 
   const handleKYCAction = async (companyId, status) => {
     try {
       setActionLoading(companyId);
-      await adminAPI.updateKYCStatus(companyId, status);
-      
-      await fetchCompanies();
+      await dispatch(updateKYCStatus({ companyId, status })).unwrap();
     } catch (err) {
-      setError(err.response?.data?.message || `Failed to ${status} KYC`);
+      alert(err || `Failed to ${status} KYC`);
     } finally {
       setActionLoading(null);
     }
@@ -47,12 +33,10 @@ const SuperAdminDashboard = () => {
   const handleDeleteCompany = async (companyId) => {
     try {
       setActionLoading(companyId);
-      await adminAPI.deleteCompany(companyId);
-      setError(null);
-      await fetchCompanies();
+      await dispatch(deleteCompany(companyId)).unwrap();
       setDeleteConfirm(null);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to delete company');
+      alert(err || 'Failed to delete company');
     } finally {
       setActionLoading(null);
     }
@@ -60,7 +44,6 @@ const SuperAdminDashboard = () => {
 
   const pendingCompanies = companies.filter(c => c.verificationStatus === 'pending');
   const approvedCompanies = companies.filter(c => c.verificationStatus === 'approved');
-  const rejectedCompanies = companies.filter(c => c.verificationStatus === 'rejected');
 
   const stats = [
     { title: 'Pending KYC', value: String(pendingCompanies.length), icon: AlertCircle, trend: pendingCompanies.length > 0 ? { value: 'Requires action', isPositive: false, label: '' } : undefined },
@@ -79,7 +62,7 @@ const SuperAdminDashboard = () => {
     }
   };
 
-  if (loading) {
+  if (loading && companies.length === 0) {
     return <Loader fullScreen />;
   }
 

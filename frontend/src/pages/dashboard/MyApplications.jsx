@@ -1,32 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Briefcase, Search, Filter, Calendar, MapPin, Building } from 'lucide-react';
-import { applicationAPI } from '../../services/api';
+import { useDispatch, useSelector } from 'react-redux';
+import { Briefcase, Search } from 'lucide-react';
+import { fetchMyApplications } from '../../store/thunks/applicationThunks';
 import ApplicationCard from '../../features/applications/components/ApplicationCard';
 import Loader from '../../components/ui/Loader';
 import Button from '../../components/ui/Button';
 
 const MyApplications = () => {
-  const [applications, setApplications] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
+  const { myApplications: applications, loading } = useSelector(state => state.applications);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
-    const fetchApplications = async () => {
-      try {
-        setLoading(true);
-        const response = await applicationAPI.getMyApplications();
-        const apps = response.data?.data?.applications || response.data?.data || [];
-        setApplications(Array.isArray(apps) ? apps : []);
-      } catch (err) {
-        console.error('Error fetching applications:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchApplications();
-  }, []);
+    dispatch(fetchMyApplications());
+  }, [dispatch]);
 
   const filteredApplications = applications.filter(app => {
     const jobTitle = app.jobId?.title?.toLowerCase() || '';

@@ -1,18 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Briefcase } from 'lucide-react';
-import { loginStart, loginSuccess, loginFailure } from '../../store/slices/authSlice';
-import { authAPI } from '../../services/api';
+import { registerUser } from '../../store/thunks/authThunks';
+import { clearError } from '../../store/slices/authSlice';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import styles from './Auth.module.css';
 
 const Register = () => {
   const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
-  const { loading, error } = useSelector((state) => state.auth);
+  const { loading, error, isAuthenticated } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+    return () => {
+      dispatch(clearError());
+    };
+  }, [isAuthenticated, navigate, dispatch]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -21,20 +30,13 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      dispatch(loginFailure("Passwords do not match"));
-      return;
+      // We could use a local error state here if we don't want to pollute global error
+      // but for consistency with existing logic:
+      return; 
     }
     
-    dispatch(loginStart());
-    try {
-      const { name, email, password } = formData;
-      const response = await authAPI.register({ name, email, password, role: 'user' });
-
-      dispatch(loginSuccess(response.data.data));
-      navigate('/dashboard');
-    } catch (err) {
-      dispatch(loginFailure(err.response?.data?.message || 'Registration failed'));
-    }
+    const { name, email, password } = formData;
+    dispatch(registerUser({ name, email, password, role: 'user' }));
   };
 
   return (
@@ -47,6 +49,9 @@ const Register = () => {
         </div>
 
         {error && <div className={styles.errorAlert}>{error}</div>}
+        {formData.password !== formData.confirmPassword && formData.confirmPassword && (
+          <div className={styles.errorAlert}>Passwords do not match</div>
+        )}
 
         <form onSubmit={handleSubmit} className={styles.authForm}>
           <Input
@@ -89,7 +94,7 @@ const Register = () => {
             type="submit"
             variant="primary"
             fullWidth
-            disabled={loading}
+            disabled={loading || (formData.password !== formData.confirmPassword && formData.confirmPassword)}
             className="mt-4"
           >
             {loading ? 'Creating Account...' : 'Sign Up'}

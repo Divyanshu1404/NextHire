@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { FileText, Send, X, AlertCircle, Upload } from 'lucide-react';
 import Modal from '../../../components/ui/Modal';
 import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
-import { applicationAPI, userAPI, uploadAPI } from '../../../services/api';
+import { applyToJob } from '../../../store/thunks/applicationThunks';
+import { fetchUserProfile } from '../../../store/thunks/userThunks';
+import { uploadAPI } from '../../../services/api';
 
 const ApplyModal = ({ isOpen, onClose, jobId, jobTitle, companyName, onSuccess }) => {
-  const { user } = useSelector(state => state.auth);
+  const dispatch = useDispatch();
+  const { profile } = useSelector(state => state.user);
   const [formData, setFormData] = useState({ 
     resumeUrl: '', 
     coverLetter: '' 
@@ -18,20 +21,15 @@ const ApplyModal = ({ isOpen, onClose, jobId, jobTitle, companyName, onSuccess }
 
   useEffect(() => {
     if (isOpen) {
-      const fetchProfile = async () => {
-        try {
-          const response = await userAPI.getProfile();
-          const profile = response.data.data.user || response.data.data;
-          if (profile.profile?.resumeUrl) {
-            setFormData(prev => ({ ...prev, resumeUrl: profile.profile.resumeUrl }));
-          }
-        } catch (err) {
-          console.error("Couldn't fetch profile for pre-fill", err);
-        }
-      };
-      fetchProfile();
+      dispatch(fetchUserProfile());
     }
-  }, [isOpen]);
+  }, [isOpen, dispatch]);
+
+  useEffect(() => {
+    if (profile?.profile?.resumeUrl) {
+      setFormData(prev => ({ ...prev, resumeUrl: profile.profile.resumeUrl }));
+    }
+  }, [profile]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -48,18 +46,18 @@ const ApplyModal = ({ isOpen, onClose, jobId, jobTitle, companyName, onSuccess }
         const uploadData = new FormData();
         uploadData.append('file', coverLetterFile);
         const uploadRes = await uploadAPI.uploadFile(uploadData);
-        // Assuming the response structure is { data: { url: '...' } } or similar
         coverLetterValue = uploadRes.data.data?.url || uploadRes.data.url || uploadRes.data;
       }
 
-      await applicationAPI.applyToJob({ 
+      await dispatch(applyToJob({ 
         ...formData, 
         coverLetter: coverLetterValue,
         jobId 
-      });
+      })).unwrap();
+      
       onSuccess();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to submit application');
+      setError(err || 'Failed to submit application');
     } finally {
       setLoading(false);
     }

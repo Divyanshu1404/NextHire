@@ -1,29 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { Building, Globe, ChevronRight } from 'lucide-react';
-import { companyAPI } from '../services/api';
+import { fetchApprovedCompanies } from '../store/thunks/companyThunks';
 import Loader from '../components/ui/Loader';
 import Button from '../components/ui/Button';
 
 const CompaniesPage = () => {
   const navigate = useNavigate();
-  const [companies, setCompanies] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
+  const { companies, loading } = useSelector(state => state.company);
 
   useEffect(() => {
-    const fetchCompanies = async () => {
-      try {
-        setLoading(true);
-        const res = await companyAPI.getAllApprovedCompanies();
-        setCompanies(res.data?.data?.companies || []);
-      } catch (error) {
-        console.error('Error fetching companies', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCompanies();
-  }, []);
+    dispatch(fetchApprovedCompanies());
+  }, [dispatch]);
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '4rem 1.5rem', minHeight: '80vh' }}>

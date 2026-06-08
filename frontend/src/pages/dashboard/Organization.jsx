@@ -1,48 +1,38 @@
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Building2, Globe, Mail, Save, RotateCcw, Upload, Image as ImageIcon, AlertCircle } from 'lucide-react';
-import { companyAPI, uploadAPI } from '../../services/api';
+import { fetchCompanyDetails, updateCompany } from '../../store/thunks/companyThunks';
+import { uploadAPI } from '../../services/api';
 import Loader from '../../components/ui/Loader';
 import Button from '../../components/ui/Button';
 import styles from './Organization.module.css';
 
 const Organization = () => {
+  const dispatch = useDispatch();
   const { user } = useSelector(state => state.auth);
-  const [company, setCompany] = useState(null);
+  const { selectedCompany: company, loading } = useSelector(state => state.company);
+  
   const [form, setForm] = useState({ companyName: '', email: '', website: '', logoUrl: '' });
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
   useEffect(() => {
-    const fetch = async () => {
-      setLoading(true);
-      try {
-        const compId = user?.companyId?._id || user?.companyId;
-        if (!compId) {
-          setCompany(null);
-          return;
-        }
-        const res = await companyAPI.getCompanyDetails(compId);
-        const data = res.data.data.company || res.data.data;
-        setCompany(data);
-        if (data) {
-          setForm({
-            companyName: data.companyName || '',
-            email: data.email || '',
-            website: data.website || '',
-            logoUrl: data.logoUrl || ''
-          });
-        }
-      } catch (err) {
-        console.error('Fetch company error', err.response || err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const compId = user?.companyId?._id || user?.companyId;
+    if (compId) {
+      dispatch(fetchCompanyDetails(compId));
+    }
+  }, [dispatch, user]);
 
-    fetch();
-  }, [user]);
+  useEffect(() => {
+    if (company) {
+      setForm({
+        companyName: company.companyName || '',
+        email: company.email || '',
+        website: company.website || '',
+        logoUrl: company.logoUrl || ''
+      });
+    }
+  }, [company]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -55,19 +45,10 @@ const Organization = () => {
       setSaving(true);
       const compId = user?.companyId?._id || user?.companyId;
       if (!compId) return alert('No company found');
-      const res = await companyAPI.updateCompany(compId, form);
-      const updated = res.data.data.company || res.data.data;
-      setCompany(updated);
-      setForm({
-        companyName: updated.companyName || '',
-        email: updated.email || '',
-        website: updated.website || '',
-        logoUrl: updated.logoUrl || ''
-      });
+      await dispatch(updateCompany({ id: compId, data: form })).unwrap();
       alert('Organization updated');
     } catch (err) {
-      console.error('Update error', err.response || err.message);
-      alert(err.response?.data?.message || 'Failed to update organization');
+      alert(err || 'Failed to update organization');
     } finally {
       setSaving(false);
     }
@@ -95,14 +76,13 @@ const Organization = () => {
       const url = upRes.data.data.url || upRes.data.data;
       setForm(prev => ({ ...prev, logoUrl: url }));
     } catch (err) {
-      console.error('Upload error', err.response || err.message);
       alert('Failed to upload logo');
     } finally {
       setUploadingLogo(false);
     }
   };
 
-  if (loading) return <Loader fullScreen={false} />;
+  if (loading && !company) return <Loader fullScreen={false} />;
 
   const previewLogoUrl = form.logoUrl || company?.logoUrl || '';
 

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { authAPI } from '../services/api';
-import { setUser, logout } from '../store/slices/authSlice';
+import { fetchCurrentUser } from '../store/thunks/authThunks';
 import { getToken } from '../utils/storage';
 
 export const useAuthBootstrap = () => {
@@ -17,10 +16,9 @@ export const useAuthBootstrap = () => {
       }
 
       try {
-        const response = await authAPI.getCurrentUser();
-        dispatch(setUser(response.data.data));
+        await dispatch(fetchCurrentUser()).unwrap();
       } catch {
-        dispatch(logout());
+        // Error handling is managed by extraReducers in authSlice
       } finally {
         setInitializing(false);
       }

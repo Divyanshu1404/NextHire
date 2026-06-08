@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { MapPin, Briefcase, DollarSign, Clock, Building, ChevronLeft, Calendar, Tag } from 'lucide-react';
-import { jobsAPI, applicationAPI } from '../../services/api';
+import { fetchJobById } from '../../store/thunks/jobThunks';
+import { fetchMyApplications } from '../../store/thunks/applicationThunks';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Loader from '../../components/ui/Loader';
@@ -12,46 +13,30 @@ import styles from '../../components/jobs/Jobs.module.css';
 const JobDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  
   const { isAuthenticated, user } = useSelector(state => state.auth);
-  const [job, setJob] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { selectedJob: job, loading } = useSelector(state => state.jobs);
+  const { myApplications } = useSelector(state => state.applications);
+  
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
-  const [hasApplied, setHasApplied] = useState(false);
 
   useEffect(() => {
-    const fetchJobDetails = async () => {
-      setLoading(true);
-      try {
-        const response = await jobsAPI.getJobById(id);
-        const jobData = response.data.data.job || response.data.data;
-        setJob(jobData);
+    dispatch(fetchJobById(id));
+    if (isAuthenticated && user?.role === 'user') {
+      dispatch(fetchMyApplications());
+    }
+  }, [id, isAuthenticated, user, dispatch]);
 
-        if (isAuthenticated && user?.role === 'user') {
-          const appRes = await applicationAPI.getMyApplications();
-          const myApps = appRes.data.data.applications || appRes.data.data || [];
-          const alreadyApplied = myApps.some(app => 
-            (app.jobId?._id || app.jobId) === id
-          );
-          setHasApplied(alreadyApplied);
-        }
-        
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching job details', error);
-        setLoading(false);
-      }
-    };
-    fetchJobDetails();
-  }, [id, isAuthenticated]);
+  const hasApplied = myApplications.some(app => 
+    (app.jobId?._id || app.jobId) === id
+  );
 
   const handleApplyClick = () => {
-    console.log('Apply button clicked!');
     if (!isAuthenticated) {
-      console.log('User not authenticated, redirecting to login');
       navigate('/login');
       return;
     }
-    console.log('Opening Apply Modal');
     setIsApplyModalOpen(true);
   };
 
@@ -189,8 +174,8 @@ const JobDetail = () => {
         jobTitle={job.title}
         companyName={companyName}
         onSuccess={() => {
-          setHasApplied(true);
           setIsApplyModalOpen(false);
+          dispatch(fetchMyApplications());
           alert('Application submitted successfully!');
         }}
       />

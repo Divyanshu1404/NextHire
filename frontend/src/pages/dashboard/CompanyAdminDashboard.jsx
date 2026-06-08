@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Briefcase, Users, FileText, Plus, Search, Filter, Edit2, Trash2, UserPlus, Mail, Shield, X } from 'lucide-react';
 import StatCard from '../../components/ui/StatCard';
@@ -7,71 +7,60 @@ import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Loader from '../../components/ui/Loader';
 import JobPostForm from '../../features/jobs/components/JobPostForm';
-import { jobsAPI, companyAPI, uploadAPI } from '../../services/api';
+import { 
+  fetchCompanyStats, 
+  fetchCompanyTeam, 
+  fetchCompanyDetails, 
+  addTeamMember, 
+  updateCompany 
+} from '../../store/thunks/companyThunks';
+import { fetchCompanyJobs } from '../../store/thunks/jobThunks';
+import { uploadAPI } from '../../services/api';
 
 const CompanyAdminDashboard = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { user } = useSelector(state => state.auth);
+  const { companyStats, team, selectedCompany: company, loading: companyLoading } = useSelector(state => state.company);
+  const { companyJobs: jobs, loading: jobsLoading } = useSelector(state => state.jobs);
+  
+  const statsData = companyStats?.stats;
+  const stats = {
+    totalJobs: statsData?.activeJobs || statsData?.totalJobs || 0,
+    totalApplications: statsData?.totalCandidates || statsData?.totalApplications || 0,
+    shortlisted: statsData?.shortlisted || 0
+  };
+
   const [activeTab, setActiveTab] = useState('jobs');
   const [isPostJobModalOpen, setIsPostJobModalOpen] = useState(false);
-  const [jobs, setJobs] = useState([]);
-  const [team, setTeam] = useState([]);
-  const [company, setCompany] = useState(null);
-  const [stats, setStats] = useState({ totalJobs: 0, totalApplications: 0, shortlisted: 0 });
-  const [loading, setLoading] = useState(true);
-
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [companyForm, setCompanyForm] = useState({ companyName: '', email: '', website: '' });
+  const [companyForm, setCompanyForm] = useState({ companyName: '', email: '', website: '', logoUrl: '' });
 
   const [teamEmail, setTeamEmail] = useState('');
   const [teamRole, setTeamRole] = useState('recruiter');
   const [isAddingMember, setIsAddingMember] = useState(false);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      const [statsRes, jobsRes, teamRes] = await Promise.all([
-        companyAPI.getCompanyStats().catch(err => ({ data: { data: { stats: { totalJobs: 0, totalApplications: 0, shortlisted: 0 } } } })),
-        jobsAPI.getCompanyJobs().catch(err => ({ data: { data: { jobs: [] } } })),
-        companyAPI.getCompanyTeam().catch(err => ({ data: { data: { team: [] } } }))
-      ]);
-
-      const statsData = statsRes.data.data.stats || statsRes.data.data;
-      setStats({
-        totalJobs: statsData.activeJobs || statsData.totalJobs || 0,
-        totalApplications: statsData.totalCandidates || statsData.totalApplications || 0,
-        shortlisted: statsData.shortlisted || 0
-      });
-
-      const jobsData = jobsRes.data.data.jobs || jobsRes.data.data;
-      setJobs(Array.isArray(jobsData) ? jobsData : []);
-
-      const teamData = teamRes.data.data.team || teamRes.data.data;
-      setTeam(Array.isArray(teamData) ? teamData : []);
-      // fetch company details if available
-      try {
-        const compId = user?.companyId?._id || user?.companyId;
-        if (compId) {
-          const compRes = await companyAPI.getCompanyDetails(compId).catch(() => ({ data: { data: null } }));
-          const compData = compRes.data.data.company || compRes.data.data;
-          setCompany(compData || null);
-          if (compData) {
-            setCompanyForm({ companyName: compData.companyName || '', email: compData.email || '', website: compData.website || '', logoUrl: compData.logoUrl || '' });
-          }
-        }
-      } catch (e) {
-        console.error('Error fetching company details', e);
-      }
-    } catch (err) {
-      console.error('Error fetching dashboard data:', err);
-    } finally {
-      setLoading(false);
+    dispatch(fetchCompanyStats());
+    dispatch(fetchCompanyJobs());
+    dispatch(fetchCompanyTeam());
+    
+    const compId = user?.companyId?._id || user?.companyId;
+    if (compId) {
+      dispatch(fetchCompanyDetails(compId));
     }
-  };
+  }, [dispatch, user]);
+
+  useEffect(() => {
+    if (company) {
+      setCompanyForm({ 
+        companyName: company.companyName || '', 
+        email: company.email || '', 
+        website: company.website || '', 
+        logoUrl: company.logoUrl || '' 
+      });
+    }
+  }, [company]);
 
   const handleAddTeamMember = async (e) => {
     e.preventDefault();
@@ -79,16 +68,11 @@ const CompanyAdminDashboard = () => {
     
     try {
       setIsAddingMember(true);
-      const res = await companyAPI.addTeamMember({ email: teamEmail, role: teamRole });
+      await dispatch(addTeamMember({ email: teamEmail, role: teamRole })).unwrap();
       alert('Team member added successfully!');
       setTeamEmail('');
-      
-      const teamRes = await companyAPI.getCompanyTeam();
-      const teamData = teamRes.data.data.team || teamRes.data.data;
-      setTeam(Array.isArray(teamData) ? teamData : []);
     } catch (err) {
-      console.error('Add Team Member Error:', err.response?.data || err.message);
-      alert(err.response?.data?.message || 'Failed to add team member. Make sure the user is registered first.');
+      alert(err || 'Failed to add team member. Make sure the user is registered first.');
     } finally {
       setIsAddingMember(false);
     }
@@ -104,18 +88,15 @@ const CompanyAdminDashboard = () => {
     try {
       const compId = user?.companyId?._id || user?.companyId;
       if (!compId) return alert('Company not found');
-      const res = await companyAPI.updateCompany(compId, companyForm);
-      const updated = res.data.data.company || res.data.data;
-      setCompany(updated);
+      await dispatch(updateCompany({ id: compId, data: companyForm })).unwrap();
       setIsEditOpen(false);
       alert('Company updated successfully');
     } catch (err) {
-      console.error('Update Company Error:', err.response?.data || err.message);
-      alert(err.response?.data?.message || 'Failed to update company');
+      alert(err || 'Failed to update company');
     }
   };
 
-  if (loading) return <Loader fullScreen />;
+  if (companyLoading || jobsLoading) return <Loader fullScreen />;
 
   return (
     <div>
@@ -175,7 +156,6 @@ const CompanyAdminDashboard = () => {
                         setCompanyForm(prev => ({ ...prev, logoUrl: url }));
                         alert('Logo uploaded');
                       } catch (err) {
-                        console.error('Upload error', err.response || err.message);
                         alert('Failed to upload logo');
                       }
                     }} />

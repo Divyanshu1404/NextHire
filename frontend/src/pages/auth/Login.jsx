@@ -1,18 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Briefcase } from 'lucide-react';
-import { loginStart, loginSuccess, loginFailure } from '../../store/slices/authSlice';
-import { authAPI } from '../../services/api';
+import { loginUser } from '../../store/thunks/authThunks';
+import { clearError } from '../../store/slices/authSlice';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import styles from './Auth.module.css';
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
-  const { loading, error } = useSelector((state) => state.auth);
+  const { loading, error, isAuthenticated } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+    return () => {
+      dispatch(clearError());
+    };
+  }, [isAuthenticated, navigate, dispatch]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -20,15 +29,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    dispatch(loginStart());
-    try {
-      const response = await authAPI.login(formData);
-
-      dispatch(loginSuccess(response.data.data));
-      navigate('/dashboard');
-    } catch (err) {
-      dispatch(loginFailure(err.response?.data?.message || 'Login failed'));
-    }
+    dispatch(loginUser(formData));
   };
 
   return (

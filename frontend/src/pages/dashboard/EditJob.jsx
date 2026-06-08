@@ -1,53 +1,43 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Briefcase, ArrowLeft } from 'lucide-react';
 import JobPostForm from '../../features/jobs/components/JobPostForm';
 import Button from '../../components/ui/Button';
-import { jobsAPI } from '../../services/api';
+import { fetchJobById } from '../../store/thunks/jobThunks';
 import { ROLES } from '../../constants/roles';
 import Loader from '../../components/ui/Loader';
 
 const EditJob = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { id } = useParams();
-  const [job, setJob] = useState(null);
-  const [loading, setLoading] = useState(true);
-
+  
   const { user, role } = useSelector(state => state.auth);
+  const { selectedJob: job, loading } = useSelector(state => state.jobs);
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
-    const fetchJob = async () => {
-      try {
-        const response = await jobsAPI.getJobById(id);
-        const jobData = response.data.data.job || response.data.data;
-        
-        // Authorization check
-        const isAuthorized = 
-          role === ROLES.SUPER_ADMIN || 
-          role === ROLES.COMPANY_ADMIN || 
-          jobData.createdBy === user?._id || 
-          jobData.createdBy === user?.id;
+    dispatch(fetchJobById(id));
+  }, [id, dispatch]);
 
-        if (!isAuthorized) {
-          alert('You are not authorized to edit this job.');
-          navigate('/dashboard/jobs');
-          return;
-        }
-        
-        setJob(jobData);
-      } catch (err) {
-        console.error('Error fetching job:', err);
-      } finally {
-        setLoading(false);
+  useEffect(() => {
+    if (job && user && !authChecked) {
+      const isAuthorized = 
+        role === ROLES.SUPER_ADMIN || 
+        role === ROLES.COMPANY_ADMIN || 
+        job.createdBy === user?._id || 
+        job.createdBy === user?.id;
+
+      if (!isAuthorized) {
+        alert('You are not authorized to edit this job.');
+        navigate('/dashboard/jobs');
       }
-    };
-    if (user) {
-      fetchJob();
+      setAuthChecked(true);
     }
-  }, [id, user, role, navigate]);
+  }, [job, user, role, navigate, authChecked]);
 
-  if (loading) return <Loader fullScreen />;
+  if (loading || (job && !authChecked)) return <Loader fullScreen />;
 
   return (
     <div>
