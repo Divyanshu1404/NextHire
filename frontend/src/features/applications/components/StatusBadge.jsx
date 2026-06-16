@@ -1,6 +1,6 @@
 import React from 'react';
 import Badge from '../../../components/ui/Badge';
-import { APPLICATION_STATUS } from '../../../constants/applicationStatus';
+import { APPLICATION_STATUS } from '../../../constants/status';
 
 const StatusBadge = ({ status }) => {
   let variant = 'default';

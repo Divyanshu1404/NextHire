@@ -235,3 +235,33 @@
   background-color: var(--border);
   margin: 0.35rem 0;
 }
+
+.themeToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: var(--text-muted);
+  transition: all 0.2s;
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.themeToggle:hover {
+  background-color: var(--background);
+  color: var(--primary);
+  border-color: var(--border);
+}
+
+.mobileThemeToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.5rem;
+  color: var(--text-main);
+  font-weight: 500;
+}

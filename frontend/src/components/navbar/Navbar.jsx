@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { Briefcase, Menu, X, User as UserIcon } from 'lucide-react';
+import { Briefcase, Menu, X, User as UserIcon, Sun, Moon } from 'lucide-react';
 import { logout } from '../../store/slices/authSlice';
 import { companyAPI } from '../../services/api';
+import { useTheme } from '../../context/ThemeContext';
 import Button from '../ui/Button';
 import styles from './Navbar.module.css';
 
@@ -11,6 +12,7 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const [company, setCompany] = useState(null);
+  const { theme, toggleTheme } = useTheme();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -61,6 +63,10 @@ const Navbar = () => {
         <div className={styles.desktopMenu}>
           <Link to="/jobs" className={styles.navLink}>JOBS</Link>
           <Link to="/companies" className={styles.navLink}>COMPANIES</Link>
+          
+          <button onClick={toggleTheme} className={styles.themeToggle} aria-label="Toggle theme">
+            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+          </button>
           
           {isAuthenticated ? (
             <div className={styles.authMenu}>
@@ -120,6 +126,12 @@ const Navbar = () => {
 
       {isMenuOpen && (
         <div className={styles.mobileMenu}>
+          <div className={styles.mobileThemeToggle}>
+            <span>Theme</span>
+            <button onClick={toggleTheme} className={styles.themeToggle}>
+              {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+            </button>
+          </div>
           <Link to="/jobs" className={styles.mobileLink} onClick={toggleMenu}>Jobs</Link>
           <Link to="/companies" className={styles.mobileLink} onClick={toggleMenu}>Companies</Link>
           

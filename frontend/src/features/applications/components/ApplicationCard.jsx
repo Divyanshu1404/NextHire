@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Building, MapPin, CheckCircle2 } from 'lucide-react';
 import StatusBadge from './StatusBadge';
-import { APPLICATION_STATUS } from '../../../constants/applicationStatus';
+import { APPLICATION_STATUS } from '../../../constants/status';
 import styles from '../Applications.module.css';
 
 const ApplicationCard = ({ application }) => {
