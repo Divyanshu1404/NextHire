@@ -9,7 +9,7 @@
 ---
 
 ## 1. Project Overview
-
+N
 NextHire is a full-stack SaaS-based job board platform designed to streamline the hiring process for recruiters, company administrators, and candidates. Built as a personal learning project to demonstrate expertise in modern web development, it showcases scalable architecture, secure authentication, role-based access control, and a polished user interface.
 
 The platform solves the common problem of fragmented job discovery, difficult application tracking, and inefficient application review by providing one centralized platform for job posting, company verification, candidate applications, and status tracking.
