@@ -9,11 +9,44 @@ import { config } from './config/env.js';
 
 const app = express();
 
+const allowedOrigins = [
+  config.clientUrl,
+  ...(process.env.CLIENT_URLS ? process.env.CLIENT_URLS.split(',') : []),
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+]
+  .filter(Boolean)
+  .map((origin) => origin.trim().replace(/\/$/, ''));
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+
+  const normalizedOrigin = origin.trim().replace(/\/$/, '');
+  if (allowedOrigins.includes(normalizedOrigin)) return true;
+
+  try {
+    const url = new URL(normalizedOrigin);
+    if (url.hostname.endsWith('.vercel.app')) return true;
+  } catch (error) {
+    return false;
+  }
+
+  return false;
+};
+
 
 app.use(helmet());
 app.use(securityHeaders);
 app.use(cors({
-  origin: config.clientUrl || true,
+  origin(origin, callback) {
+    if (isAllowedOrigin(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
   credentials: true,
 }));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 500 }));
