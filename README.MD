@@ -1,35 +1,24 @@
-# PROJECT REPORT
-## Job Board SaaS Platform (Web Development Domain)
+# NextHire 
+## A Job Board SaaS Platform
+
+**Author:** Divyanshu Mishra  
+**Email:** [mishraaman4512@gmail.com](mailto:mishraaman4512@gmail.com)  
+**Contact:** 9506880176  
+**GitHub:** [NextHire Repository](https://github.com/yourusername/nexthire)
 
 ---
 
-## 1. Candidate & Program Details
+## 1. Project Overview
+N
+NextHire is a full-stack SaaS-based job board platform designed to streamline the hiring process for recruiters, company administrators, and candidates. Built as a personal learning project to demonstrate expertise in modern web development, it showcases scalable architecture, secure authentication, role-based access control, and a polished user interface.
 
-| Field | Details |
-|------|--------|
-| Candidate Name | Divyanshu Mishra |
-| Email | [mishraaman4512@gmail.com](mailto:mishraaman4512@gmail.com) |
-| Contact Number | 9506880176 |
-| Company | MetaUpSpace |
-| Program Name | Industry Ready Developer Program (IRDP) |
-| Domain | Web Development |
-| Project Title | Job Board SaaS Platform |
-| Mentor Name | Saksham Jain & Harshit Saini |
-| Submission Date | 06/05/2026 |
+The platform solves the common problem of fragmented job discovery, difficult application tracking, and inefficient application review by providing one centralized platform for job posting, company verification, candidate applications, and status tracking.
+
+**Tech Stack:** React, Redux Toolkit, Node.js, Express.js, MongoDB, JWT, Zod Validation, Multer, Cloudinary, CSS Modules
 
 ---
 
-## 2. Executive Summary
-
-NextHire is a SaaS-based job board platform designed to streamline the hiring process for recruiters, company administrators, and candidates. It solves the common problem of fragmented job discovery, difficult application tracking, and inefficient application review by providing one centralized platform for job posting, company verification, candidate applications, and status tracking.
-
-The target users are candidates looking for jobs and recruiter-side users such as recruiters, HR, managers, company admins, and super admins who need structured hiring workflows. The platform supports secure authentication, role-based access control, company KYC verification, job posting and management, job search and filtering, application review, assessment link sharing, profile management, and file uploads.
-
-The application uses React, Redux Toolkit, React Router DOM, Node.js, Express.js, MongoDB, JWT authentication, Zod validation, Multer, and Cloudinary. The final outcome is a production-oriented full-stack web application with modular backend architecture, reusable frontend components, secure APIs, and role-based dashboards.
-
----
-
-## 3. Problem Statement
+## 2. Problem Statement
 
 Modern recruitment systems often suffer from poor role separation, scattered job listings, weak application tracking, and complicated company onboarding. Candidates struggle to manage multiple applications in one place, while companies need a controlled way to verify their identity, manage team members, and review applicants efficiently.
 
@@ -37,7 +26,7 @@ NextHire addresses this hiring and job application problem by offering a secure,
 
 ---
 
-## 4. Solution Overview
+## 3. Solution Overview
 
 NextHire is a layered monolithic recruitment platform built around separate public, authenticated, and dashboard experiences.
 
@@ -49,19 +38,19 @@ At a high level, candidates browse jobs and apply using a resume link and cover 
 
 ---
 
-## 5. Objectives
+## 4. Objectives
 
-* To build a scalable SaaS-based job portal for real-world hiring workflows
-* To provide secure authentication and role-based access control
+* To build a scalable SaaS-based job portal with real-world hiring workflows
+* To demonstrate expertise in full-stack development and modern web technologies
+* To implement secure authentication and role-based access control
 * To support company registration, verification, and team management
-* To implement a job posting and application review system
-* To create a responsive and reusable frontend interface
-* To build modular REST APIs with validation and error handling
-* To gain hands-on experience in production-style full-stack development
+* To create a responsive, reusable frontend interface with premium UI
+* To build modular REST APIs with validation and comprehensive error handling
+* To deploy and maintain a production-grade application
 
 ---
 
-## 6. Technology Stack
+## 5. Technology Stack
 
 | Layer | Technology Used |
 |------|----------------|
@@ -74,24 +63,24 @@ At a high level, candidates browse jobs and apply using a resume link and cover 
 
 ---
 
-## 7. System Architecture
+## 6. System Architecture
 
-### 7.1 Architecture Type
+### 6.1 Architecture Type
 Layered Monolithic Architecture
 
-### 7.2 High-Level Flow
+### 6.2 High-Level Flow
 Client → React Frontend → Express API → Business Logic → MongoDB Database → Response
 
-### 7.3 Description
+### 6.3 Description
 The frontend sends requests to Express REST APIs through a centralized API layer. Redux Toolkit stores authentication state, while React Router DOM manages public pages, protected dashboard routes, and role-specific layouts.
 
 On the backend, requests pass through validation and authorization middleware before reaching module controllers and services. Data is stored in MongoDB using Mongoose models for users, companies, jobs, and applications. Cloudinary is used for uploaded files such as KYC documents and profile-related images.
 
 ---
 
-## 8. Key Features
+## 7. Key Features
 
-### 8.1 Core Features
+### 7.1 Core Features
 - [x] User Authentication (Signup/Login)
 - [x] Role-Based Access Control (Recruiter / Candidate)
 - [x] Job Posting & Management (Create, Edit, Delete)
@@ -101,7 +90,7 @@ On the backend, requests pass through validation and authorization middleware be
 - [x] Premium Dashboard UI (Outfit/Jakarta Sans, CSS Modules)
 - [x] CRUD Operations
 
-### 8.2 Advanced Features (Tick Implemented)
+### 7.2 Advanced Features (Tick Implemented)
 - [x] Pagination & Filtering
 - [x] Search Functionality
 - [x] Protected Routes
@@ -111,39 +100,39 @@ On the backend, requests pass through validation and authorization middleware be
 
 ---
 
-## 9. Module-Wise Breakdown
+## 8. Module-Wise Breakdown
 
-### 9.1 Authentication Module
+### 8.1 Authentication Module
 **Description:**
 The authentication system supports user registration, login, JWT token generation, and session restoration on the frontend. Passwords are hashed before storage, protected routes restrict unauthenticated access, and role-based authorization ensures users only access allowed resources.
 
 ---
 
-### 9.2 Job Management Module
+### 8.2 Job Management Module
 **Description:**
 The job management module allows approved company recruiters and HR to create, update, delete, and view job listings. Each job stores title, description, location, salary range, job type, experience level, and required skills. Public users can browse jobs and filter them by keyword, location, and type. Company Admins have view-only access to their company's job listings.
 
 ---
 
-### 9.3 Dashboard & Stats Module
+### 8.3 Dashboard & Stats Module
 **Description:**
 The Recruiter Dashboard has been modernized with real-time statistics including Active Jobs, Total Candidates, and Shortlisted counts. A dynamic Recent Activity feed tracks latest applications with relative time formatting (e.g., "2 hours ago") and status badges. The UI features premium typography and smooth transitions using CSS Modules.
 
 ---
 
-### 9.4 Application Module
+### 8.4 Application Module
 **Description:**
 The application module handles the full job application flow. Candidates can apply by providing a resume link and uploading a PDF cover letter. Recruiter-side users can review applications, view/download cover letters directly, shortlist, reject, select, and send assessment links. The system also tracks application status in real-time, showing "Applied" status directly on the job cards for candidates.
 
 ---
 
-### 9.4 Frontend Module
+### 8.5 Frontend Module
 **Description:**
 The frontend uses a component-based architecture with public layouts and dashboard layouts. Reusable UI components such as buttons, badges, loaders, modals, cards, and inputs keep the interface consistent. Role-based dashboards improve navigation, while CSS Modules and inline styling are used for styling.
 
 ---
 
-### 9.5 Database Design
+### 8.6 Database Design
 **Entities:**
 - Users
 - Companies
@@ -155,7 +144,7 @@ The schema is designed to support nested profile data and recruitment workflows.
 
 ---
 
-## 10. API Design Overview
+## 9. API Design Overview
 
 | Endpoint | Method | Description |
 |---------|--------|------------|
@@ -191,7 +180,7 @@ The actual backend APIs are organized under the `/api` prefix with separate rout
 
 ---
 
-## 11. Challenges & Solutions
+## 10. Challenges & Solutions
 
 | Challenge | Solution |
 |----------|---------|
@@ -203,7 +192,7 @@ The actual backend APIs are organized under the `/api` prefix with separate rout
 
 ---
 
-## 12. Performance & Optimization
+## 11. Performance & Optimization
 
 - Query-based filtering for jobs using keyword, location, and job type
 - Separate feature modules to keep API logic maintainable
@@ -211,12 +200,9 @@ The actual backend APIs are organized under the `/api` prefix with separate rout
 - Centralized auth state management with Redux Toolkit
 - Efficient dashboard loading with targeted API calls
 
-**Candidate Input:**
-The project focuses on clean API separation and practical performance improvements rather than heavy caching or pagination at scale. Filtering and route protection are implemented to keep interactions responsive and secure.
-
 ---
 
-## 13. Testing Strategy
+## 12. Testing Strategy
 
 - API Testing
 - Manual UI Testing
@@ -224,12 +210,9 @@ The project focuses on clean API separation and practical performance improvemen
 - Route Protection Testing
 - Role Access Verification
 
-**Candidate Input:**
-The APIs were tested using Postman and browser-based manual testing. Frontend flows such as login, registration, company registration, job browsing, job application, profile update, and dashboard access were checked manually. MongoDB Compass was used to inspect stored records where needed.
-
 ---
 
-## 14. Deployment Details
+## 13. Deployment Details
 
 | Item | Details |
 |-----|--------|
@@ -240,14 +223,83 @@ The APIs were tested using Postman and browser-based manual testing. Frontend fl
 
 ---
 
-## 15. Outcomes
+## 14. Outcomes & Learning
 
-- Production-ready SaaS application
-- Live deployed system
-- Real-world portfolio project
-- Hands-on experience with industry tools
+- Built a production-ready SaaS application from scratch
+- Deployed and maintained a live system
+- Gained hands-on experience with industry tools and best practices
+- Created a portfolio-quality project showcasing full-stack development skills
+- Implemented complex workflows including authentication, authorization, and multi-step processes
+- Practiced clean code architecture and modular development
 
 ---
+
+## 15. Getting Started
+
+### Prerequisites
+- Node.js (v14 or higher)
+- MongoDB
+- npm or yarn
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/yourusername/nexthire.git
+   cd nexthire
+   ```
+
+2. **Install backend dependencies:**
+   ```bash
+   cd backend
+   npm install
+   ```
+
+3. **Install frontend dependencies:**
+   ```bash
+   cd ../frontend
+   npm install
+   ```
+
+4. **Setup environment variables:**
+   - Create `.env` file in the backend directory
+   - Add required configuration (Database URL, JWT Secret, Cloudinary credentials, etc.)
+
+5. **Start the development servers:**
+   ```bash
+   # Terminal 1 - Backend (from backend directory)
+   npm start
+
+   # Terminal 2 - Frontend (from frontend directory)
+   npm run dev
+   ```
+
+---
+
+## 16. Project Structure
+
+```
+NextHire/
+├── backend/           # Node.js + Express API
+│   ├── src/
+│   │   ├── modules/   # Feature-based modules
+│   │   ├── models/    # MongoDB schemas
+│   │   ├── middleware/ # Auth, validation, error handling
+│   │   └── config/    # Database, environment config
+│   └── package.json
+├── frontend/          # React + Redux application
+│   ├── src/
+│   │   ├── components/
+│   │   ├── features/
+│   │   ├── pages/
+│   │   └── store/
+│   └── package.json
+└── README.md
+```
+
+---
+
+## 17. Key Learnings
 
 ## 16. Key Learnings
 
