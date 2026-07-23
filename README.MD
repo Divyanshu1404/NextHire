@@ -261,6 +261,24 @@ This project improved my understanding of modular backend development, role-base
 
 ---
 
+## 17. Docker Setup
+
+The project now includes Docker support for the backend, frontend, and MongoDB.
+
+### Run with Docker
+
+1. Copy [.env.example](.env.example) to `.env` and fill in the secrets.
+2. Start the stack with `docker compose up --build` from the project root.
+3. Open the frontend at `http://localhost:3000` and the backend at `http://localhost:5000`.
+
+### Services
+
+- Frontend: Nginx serving the built Vite app on port `3000`
+- Backend: Express API on port `5000`
+- Database: MongoDB on port `27017`
+
+---
+
 ## 17. Future Enhancements
 
 - Real-time notifications

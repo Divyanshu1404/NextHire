@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { clearToken, setToken, getToken } from '../../utils/storage';
-import { loginUser, registerUser, fetchCurrentUser } from '../thunks/authThunks';
+import { loginUser, registerUser, fetchCurrentUser, googleLogin } from '../thunks/authThunks';
 
 const initialState = {
   user: null,
@@ -31,6 +31,9 @@ const authSlice = createSlice({
     },
     clearError: (state) => {
       state.error = null;
+    },
+    setError: (state, action) => {
+      state.error = action.payload;
     }
   },
   extraReducers: (builder) => {
@@ -97,9 +100,30 @@ const authSlice = createSlice({
         state.token = null;
         clearToken();
       });
+
+    // Google Login
+    builder
+      .addCase(googleLogin.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(googleLogin.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.role = action.payload.user?.role;
+        if (action.payload.token) {
+          setToken(action.payload.token);
+        }
+      })
+      .addCase(googleLogin.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
   },
 });
 
-export const { logout, setUser, clearError } = authSlice.actions;
+export const { logout, setUser, clearError, setError } = authSlice.actions;
 
 export default authSlice.reducer;

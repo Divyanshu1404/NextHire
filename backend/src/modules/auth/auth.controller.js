@@ -16,4 +16,9 @@ export const getMe = asyncHandler(async (req, res) => {
   return sendSuccess(res, 'User fetched successfully', req.user, 200);
 });
 
+export const google = asyncHandler(async (req, res) => {
+  const data = await authService.googleLogin(req.body.idToken);
+  return sendSuccess(res, 'Google login successful', data, 200);
+});
+
 export default { register, login, getMe };

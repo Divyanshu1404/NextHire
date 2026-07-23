@@ -27,3 +27,12 @@ export const fetchCurrentUser = createAsyncThunk('auth/fetchCurrentUser', async 
     return rejectWithValue(error?.response?.data?.message || error.message);
   }
 });
+
+export const googleLogin = createAsyncThunk('auth/googleLogin', async (payload, { rejectWithValue }) => {
+  try {
+    const response = await authAPI.googleLogin(payload);
+    return response.data.data;
+  } catch (error) {
+    return rejectWithValue(error?.response?.data?.message || error.message);
+  }
+});

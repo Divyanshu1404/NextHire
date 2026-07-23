@@ -16,4 +16,10 @@ export const loginSchema = z.object({
   })
 });
 
+export const googleSchema = z.object({
+  body: z.object({
+    idToken: z.string().min(20, 'Invalid idToken')
+  })
+});
+
 export default { registerSchema, loginSchema };

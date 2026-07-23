@@ -3,6 +3,7 @@ import api from '../api/httpClient.js';
 export const authAPI = {
   login: (data) => api.post('/auth/login', data),
   register: (data) => api.post('/auth/register', data),
+  googleLogin: (data) => api.post('/auth/google', data),
   getCurrentUser: () => api.get('/auth/me'),
 };
 

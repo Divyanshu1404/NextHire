@@ -49,7 +49,10 @@ const accomplishmentSchema = new mongoose.Schema({
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  password: { type: String, required: function() { return (this.authProvider || 'local') === 'local'; } },
+  googleId: { type: String, default: '' },
+  avatar: { type: String, default: '' },
+  authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
   role: { type: String, enum: ROLE_HIERARCHY, default: ROLES.USER },
   companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', default: null },
   profilePicture: { type: String, default: '' },

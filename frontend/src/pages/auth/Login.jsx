@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Briefcase } from 'lucide-react';
-import { loginUser } from '../../store/thunks/authThunks';
-import { clearError } from '../../store/slices/authSlice';
+import { GoogleLogin } from '@react-oauth/google';
+import { loginUser, googleLogin } from '../../store/thunks/authThunks';
+import { clearError, setError } from '../../store/slices/authSlice';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import styles from './Auth.module.css';
+
+const hasGoogleClientId = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID);
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -30,6 +33,21 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     dispatch(loginUser(formData));
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const idToken = credentialResponse?.credential;
+    if (!idToken) {
+      dispatch(setError('Google login failed'));
+      return;
+    }
+
+    try {
+      await dispatch(googleLogin({ idToken })).unwrap();
+      navigate('/dashboard');
+    } catch (err) {
+      dispatch(setError(err || 'Google login failed'));
+    }
   };
 
   return (
@@ -71,6 +89,17 @@ const Login = () => {
           >
             {loading ? 'Logging in...' : 'Login'}
           </Button>
+          {hasGoogleClientId && (
+            <div className="mt-3 flex justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => dispatch(setError('Google login failed'))}
+                theme="outline"
+                shape="rectangular"
+                text="continue_with"
+              />
+            </div>
+          )}
         </form>
 
         <div className={styles.authFooter}>

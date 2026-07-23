@@ -1,7 +1,7 @@
 import express from 'express';
-import { register, login, getMe } from './auth.controller.js';
+import { register, login, getMe, google } from './auth.controller.js';
 import { validate } from '../../middleware/validate.middleware.js';
-import { registerSchema, loginSchema } from './auth.validation.js';
+import { registerSchema, loginSchema, googleSchema } from './auth.validation.js';
 import { protect } from '../../middleware/auth.middleware.js';
 
 const router = express.Router();
@@ -14,6 +14,7 @@ router.get('/register', (req, res) => {
 });
 router.post('/register', validate(registerSchema), register);
 router.post('/login', validate(loginSchema), login);
+router.post('/google', validate(googleSchema), google);
 router.get('/me', protect, getMe);
 
 export default router;
