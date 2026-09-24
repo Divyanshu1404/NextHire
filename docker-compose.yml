@@ -42,7 +42,7 @@ services:
     ports:
       - "5000:5000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/api" ]
+      test: ["CMD", "curl", "-f", "http://localhost:5000" ]
       interval: 30s
       timeout: 10s
       retries: 3
