@@ -4,29 +4,74 @@ services:
     restart: unless-stopped
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
 
   backend:
     image: ${ECR_REGISTRY}/${ECR_BACKEND_IMAGE}:${IMAGE_TAG:-latest}
     restart: unless-stopped
     depends_on:
-      - mongo
-    env_file:
-      - ./.env
+      mongo:
+        condition: service_healthy
     environment:
       NODE_ENV: production
       PORT: 5000
       MONGO_URI: mongodb://mongo:27017/nexthire
       CLIENT_URL: ${CLIENT_URL:-http://localhost:3000}
+      JWT_SECRET: ${JWT_SECRET?JWT_SECRET is required}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME?CLOUDINARY_CLOUD_NAME is required}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY?CLOUDINARY_API_KEY is required}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET?CLOUDINARY_API_SECRET is required}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID?GOOGLE_CLIENT_ID is required}
     ports:
       - "5000:5000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
 
   frontend:
     image: ${ECR_REGISTRY}/${ECR_FRONTEND_IMAGE}:${IMAGE_TAG:-latest}
     restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
       - "3000:80"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
 
 volumes:
   mongo_data:
